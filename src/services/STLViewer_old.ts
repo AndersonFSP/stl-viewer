@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 
 export class STLViewer {
   private canvas: HTMLCanvasElement
@@ -8,12 +9,13 @@ export class STLViewer {
   private camera!: THREE.PerspectiveCamera
   private renderer!: THREE.WebGLRenderer
   private controls!: OrbitControls
+  private transformControls!: TransformControls
   private stlMesh: THREE.Mesh | null = null
   private animationId: number | null = null
   private loader: STLLoader
   private isDragging = false
   private previousMousePosition = { x: 0, y: 0 }
-  private controlMode: 'object' | 'camera' = 'camera'
+  private controlMode: 'object' | 'camera' = 'object'
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -29,6 +31,7 @@ export class STLViewer {
     this.setupRenderer()
     this.setupLights()
     this.setupControls()
+    this.setupTransformControls()
     this.setupEventListeners()
     this.animate()
   }
@@ -40,9 +43,11 @@ export class STLViewer {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x1a1a1a)
 
+    // Adicionar grid helper para referência
     const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222)
     this.scene.add(gridHelper)
 
+    // Adicionar eixos helper
     const axesHelper = new THREE.AxesHelper(5)
     this.scene.add(axesHelper)
   }
@@ -68,6 +73,7 @@ export class STLViewer {
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     
+    // Garantir que o canvas pode receber eventos
     this.canvas.style.touchAction = 'none'
     this.canvas.tabIndex = 1
   }
@@ -76,13 +82,16 @@ export class STLViewer {
    * Configura as luzes da cena
    */
   private setupLights(): void {
+    // Luz ambiente
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
     this.scene.add(ambientLight)
 
+    // Luz direcional
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
     directionalLight.position.set(5, 10, 5)
     this.scene.add(directionalLight)
 
+    // Luz adicional
     const light2 = new THREE.DirectionalLight(0xffffff, 0.5)
     light2.position.set(-5, 5, -5)
     this.scene.add(light2)
@@ -98,12 +107,29 @@ export class STLViewer {
     this.controls.screenSpacePanning = false
     this.controls.minDistance = 1
     this.controls.maxDistance = 100
+    
+    // Configurar sensibilidade
     this.controls.rotateSpeed = 1.0
     this.controls.zoomSpeed = 1.2
     this.controls.panSpeed = 0.8
     
-    // Inicialmente habilitado (modo câmera)
-    this.controls.enabled = true
+    // Inicialmente desabilitado (modo objeto)
+    this.controls.enabled = false
+  }
+
+  /**
+   * Configura os controles de transformação do objeto
+   */
+  private setupTransformControls(): void {
+    this.transformControls = new TransformControls(this.camera, this.canvas)
+    this.transformControls.setMode('rotate')
+    this.transformControls.setSize(0.8)
+    this.transformControls.enabled = false // Desabilitado por padrão
+    this.scene.add(this.transformControls as unknown as THREE.Object3D)
+
+    this.transformControls.addEventListener('dragging-changed', (event: any) => {
+      this.controls.enabled = !event.value
+    })
   }
 
   /**
@@ -115,53 +141,29 @@ export class STLViewer {
     this.canvas.addEventListener('mousedown', this.handleMouseDown)
     this.canvas.addEventListener('mousemove', this.handleMouseMove)
     this.canvas.addEventListener('mouseup', this.handleMouseUp)
-    this.canvas.addEventListener('mouseleave', this.handleMouseUp)
+    this.canvas.addEventListener('wheel', this.handleWheel)
   }
 
   /**
    * Handler para teclas de atalho
    */
   private handleKeyDown = (event: KeyboardEvent): void => {
-    if (event.key.toLowerCase() === 'c') {
-      this.toggleControlMode()
-    }
-  }
+    if (!this.stlMesh) return
 
-  /**
-   * Handler para mouse down
-   */
-  private handleMouseDown = (event: MouseEvent): void => {
-    if (this.controlMode !== 'object' || !this.stlMesh) return
-    
-    event.preventDefault()
-    this.isDragging = true
-    this.previousMousePosition = { x: event.clientX, y: event.clientY }
-    this.canvas.style.cursor = 'grabbing'
-  }
-
-  /**
-   * Handler para mouse move
-   */
-  private handleMouseMove = (event: MouseEvent): void => {
-    if (!this.isDragging || this.controlMode !== 'object' || !this.stlMesh) return
-
-    const deltaX = event.clientX - this.previousMousePosition.x
-    const deltaY = event.clientY - this.previousMousePosition.y
-
-    // Rotacionar o objeto com base no movimento do mouse
-    this.stlMesh.rotation.y += deltaX * 0.01
-    this.stlMesh.rotation.x += deltaY * 0.01
-
-    this.previousMousePosition = { x: event.clientX, y: event.clientY }
-  }
-
-  /**
-   * Handler para mouse up
-   */
-  private handleMouseUp = (): void => {
-    if (this.isDragging) {
-      this.isDragging = false
-      this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
+    switch (event.key.toLowerCase()) {
+      case 'g': // Move (G de "Grab" do Blender)
+        this.setTransformMode('translate')
+        break
+      case 'r': // Rotate
+        this.setTransformMode('rotate')
+        break
+      case 's': // Scale
+        this.setTransformMode('scale')
+        break
+      case 'escape':
+        this.transformControls.detach()
+        setTimeout(() => this.transformControls.attach(this.stlMesh!), 100)
+        break
     }
   }
 
@@ -193,14 +195,18 @@ export class STLViewer {
         }
 
         try {
+          // Remover mesh anterior se existir
           this.clearSTL()
 
+          // Carregar geometria do buffer
           const arrayBuffer = event.target.result as ArrayBuffer
           const geometry = this.loader.parse(arrayBuffer)
 
+          // Centralizar e normalizar geometria
           geometry.center()
           geometry.computeVertexNormals()
 
+          // Calcular tamanho para ajustar escala
           geometry.computeBoundingBox()
           const boundingBox = geometry.boundingBox!
           const size = new THREE.Vector3()
@@ -208,6 +214,7 @@ export class STLViewer {
           const maxDim = Math.max(size.x, size.y, size.z)
           const scale = 5 / maxDim
 
+          // Criar material
           const material = new THREE.MeshPhongMaterial({
             color: 0x00aa88,
             specular: 0x111111,
@@ -215,11 +222,13 @@ export class STLViewer {
             flatShading: false,
           })
 
+          // Criar mesh
           this.stlMesh = new THREE.Mesh(geometry, material)
           this.stlMesh.scale.set(scale, scale, scale)
           
           this.scene.add(this.stlMesh)
 
+          // Ajustar câmera
           this.fitCameraToObject()
           
           // Mudar para modo objeto após carregar
@@ -249,7 +258,7 @@ export class STLViewer {
     const maxDim = Math.max(size.x, size.y, size.z)
     const fov = this.camera.fov * (Math.PI / 180)
     let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2))
-    cameraZ *= 1.5
+    cameraZ *= 1.5 // Adicionar margem
 
     this.camera.position.set(center.x + cameraZ, center.y + cameraZ, center.z + cameraZ)
     this.camera.lookAt(center)
@@ -262,6 +271,7 @@ export class STLViewer {
    */
   clearSTL(): void {
     if (this.stlMesh) {
+      this.transformControls.detach()
       this.scene.remove(this.stlMesh)
       this.stlMesh.geometry.dispose()
       if (Array.isArray(this.stlMesh.material)) {
@@ -301,12 +311,32 @@ export class STLViewer {
   }
 
   /**
+   * Define o modo de transformação
+   */
+  setTransformMode(mode: 'translate' | 'rotate' | 'scale'): void {
+    this.transformControls.setMode(mode)
+  }
+
+  /**
+   * Ativa/desativa os controles de transformação
+   */
+  setTransformEnabled(enabled: boolean): void {
+    this.transformControls.enabled = enabled
+    if (!enabled) {
+      this.transformControls.detach()
+    } else if (this.stlMesh) {
+      this.transformControls.attach(this.stlMesh)
+    }
+  }
+
+  /**
    * Reseta a transformação do modelo
    */
   resetTransform(): void {
     if (this.stlMesh) {
       this.stlMesh.position.set(0, 0, 0)
       this.stlMesh.rotation.set(0, 0, 0)
+      // Manter a escala atual (calculada no carregamento)
       this.fitCameraToObject()
     }
   }
@@ -317,8 +347,10 @@ export class STLViewer {
   animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate)
 
+    // Atualizar controles
     this.controls.update()
 
+    // Renderizar cena
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -333,21 +365,27 @@ export class STLViewer {
    * Limpa recursos e event listeners
    */
   dispose(): void {
+    // Cancelar animação
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId)
     }
 
+    // Remover event listeners
     window.removeEventListener('resize', this.handleResize)
     window.removeEventListener('keydown', this.handleKeyDown)
     this.canvas.removeEventListener('mousedown', this.handleMouseDown)
     this.canvas.removeEventListener('mousemove', this.handleMouseMove)
     this.canvas.removeEventListener('mouseup', this.handleMouseUp)
-    this.canvas.removeEventListener('mouseleave', this.handleMouseUp)
+    this.canvas.removeEventListener('wheel', this.handleWheel)
 
+    // Limpar STL
     this.clearSTL()
 
+    // Limpar controles
+    this.transformControls?.dispose()
     this.controls?.dispose()
 
+    // Limpar renderer
     this.renderer?.dispose()
   }
 }

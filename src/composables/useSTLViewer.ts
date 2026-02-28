@@ -50,6 +50,18 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
     error.value = null
   }
 
+  const toggleControlMode = () => {
+    stlViewer?.toggleControlMode()
+  }
+
+  const getControlMode = () => {
+    return stlViewer?.getControlMode() || 'camera'
+  }
+
+  const resetTransform = () => {
+    stlViewer?.resetTransform()
+  }
+
   return {
     stlViewer,
     isLoading,
@@ -57,5 +69,8 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
     fileName,
     loadFile,
     clearModel,
+    toggleControlMode,
+    getControlMode,
+    resetTransform,
   }
 }
