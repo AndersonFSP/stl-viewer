@@ -14,6 +14,7 @@ export class STLViewer {
   private isDragging = false
   private previousMousePosition = { x: 0, y: 0 }
   private controlMode: 'object' | 'camera' = 'camera'
+  private onControlModeChange?: (mode: 'object' | 'camera') => void
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -67,7 +68,7 @@ export class STLViewer {
     })
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    
+
     this.canvas.style.touchAction = 'none'
     this.canvas.tabIndex = 1
   }
@@ -101,7 +102,7 @@ export class STLViewer {
     this.controls.rotateSpeed = 1.0
     this.controls.zoomSpeed = 1.2
     this.controls.panSpeed = 0.8
-    
+
     // Inicialmente habilitado (modo câmera)
     this.controls.enabled = true
   }
@@ -132,7 +133,7 @@ export class STLViewer {
    */
   private handleMouseDown = (event: MouseEvent): void => {
     if (this.controlMode !== 'object' || !this.stlMesh) return
-    
+
     event.preventDefault()
     this.isDragging = true
     this.previousMousePosition = { x: event.clientX, y: event.clientY }
@@ -217,11 +218,11 @@ export class STLViewer {
 
           this.stlMesh = new THREE.Mesh(geometry, material)
           this.stlMesh.scale.set(scale, scale, scale)
-          
+
           this.scene.add(this.stlMesh)
 
           this.fitCameraToObject()
-          
+
           // Mudar para modo objeto após carregar
           this.setControlMode('object')
 
@@ -282,6 +283,7 @@ export class STLViewer {
     this.controlMode = this.controlMode === 'object' ? 'camera' : 'object'
     this.controls.enabled = this.controlMode === 'camera'
     this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
+    this.onControlModeChange?.(this.controlMode)
   }
 
   /**
@@ -291,6 +293,7 @@ export class STLViewer {
     this.controlMode = mode
     this.controls.enabled = mode === 'camera'
     this.canvas.style.cursor = mode === 'object' ? 'grab' : 'default'
+    this.onControlModeChange?.(mode)
   }
 
   /**
@@ -298,6 +301,13 @@ export class STLViewer {
    */
   getControlMode(): 'object' | 'camera' {
     return this.controlMode
+  }
+
+  /**
+   * Registra callback para mudanças de modo
+   */
+  onModeChange(callback: (mode: 'object' | 'camera') => void): void {
+    this.onControlModeChange = callback
   }
 
   /**

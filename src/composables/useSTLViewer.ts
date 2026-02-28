@@ -6,12 +6,18 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const fileName = ref<string | null>(null)
+  const controlMode = ref<'object' | 'camera'>('camera')
 
   onMounted(() => {
     if (!canvasRef.value) return
 
     stlViewer = new STLViewer(canvasRef.value)
     stlViewer.init()
+    
+    // Registrar callback para atualizar o modo quando mudar
+    stlViewer.onModeChange((mode) => {
+      controlMode.value = mode
+    })
   })
 
   onUnmounted(() => {
@@ -67,6 +73,7 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
     isLoading,
     error,
     fileName,
+    controlMode,
     loadFile,
     clearModel,
     toggleControlMode,

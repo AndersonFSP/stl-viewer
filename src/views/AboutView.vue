@@ -5,9 +5,16 @@ import { useSTLViewer } from '@/composables/useSTLViewer'
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
-const { isLoading, error, fileName, loadFile, clearModel, toggleControlMode, getControlMode, resetTransform } = useSTLViewer(canvasRef)
-
-const controlMode = ref<'object' | 'camera'>('camera')
+const {
+  isLoading,
+  error,
+  fileName,
+  controlMode,
+  loadFile,
+  clearModel,
+  toggleControlMode,
+  resetTransform,
+} = useSTLViewer(canvasRef)
 
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -35,7 +42,6 @@ const triggerFileInput = () => {
 
 const handleToggleMode = () => {
   toggleControlMode()
-  controlMode.value = getControlMode()
 }
 
 const handleResetTransform = () => {
@@ -61,20 +67,25 @@ const handleResetTransform = () => {
           {{ isLoading ? 'Carregando...' : 'Selecionar Arquivo STL' }}
         </button>
 
-        <button v-if="fileName" @click="clearModel" class="btn btn-secondary">
-          Limpar Modelo
-        </button>
+        <button v-if="fileName" @click="clearModel" class="btn btn-secondary">Limpar Modelo</button>
       </div>
 
       <div v-if="fileName" class="transform-controls">
         <div class="control-group">
-          <button @click="handleToggleMode" :class="['btn', 'btn-toggle', { 'mode-object': controlMode === 'object', 'mode-camera': controlMode === 'camera' }]">
-            <span v-if="controlMode === 'object'">🎯 Modo: Rotacionar Objeto (Pressione C para alternar)</span>
+          <button
+            @click="handleToggleMode"
+            :class="[
+              'btn',
+              'btn-toggle',
+              { 'mode-object': controlMode === 'object', 'mode-camera': controlMode === 'camera' },
+            ]"
+          >
+            <span v-if="controlMode === 'object'"
+              >🎯 Modo: Rotacionar Objeto (Pressione C para alternar)</span
+            >
             <span v-else>📷 Modo: Mover Câmera (Pressione C para alternar)</span>
           </button>
-          <button @click="handleResetTransform" class="btn btn-reset">
-            ↺ Resetar Posição
-          </button>
+          <button @click="handleResetTransform" class="btn btn-reset">↺ Resetar Posição</button>
         </div>
       </div>
 
@@ -82,15 +93,9 @@ const handleResetTransform = () => {
         <span class="file-name">📄 {{ fileName }}</span>
       </div>
 
-      <div v-if="error" class="error-message">
-        ⚠️ {{ error }}
-      </div>
+      <div v-if="error" class="error-message">⚠️ {{ error }}</div>
 
-      <div
-        class="canvas-container"
-        @drop="handleDrop"
-        @dragover="handleDragOver"
-      >
+      <div class="canvas-container" @drop="handleDrop" @dragover="handleDragOver">
         <canvas ref="canvasRef" class="stl-canvas"></canvas>
         <div v-if="!fileName" class="drop-hint">
           Arraste um arquivo .stl aqui ou clique no botão acima
@@ -110,7 +115,9 @@ const handleResetTransform = () => {
         <div class="instruction-section">
           <h4>📷 Mover a Câmera:</h4>
           <ul>
-            <li><strong>Pressione a tecla <kbd>C</kbd></strong> ou clique no botão acima</li>
+            <li>
+              <strong>Pressione a tecla <kbd>C</kbd></strong> ou clique no botão acima
+            </li>
             <li>Agora você pode girar a câmera ao redor do objeto</li>
             <li>Pressione <kbd>C</kbd> novamente para voltar a rotacionar o objeto</li>
           </ul>
@@ -246,7 +253,8 @@ h1 {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 15px rgba(39, 174, 96, 0.6);
   }
   50% {
@@ -396,4 +404,3 @@ h1 {
   }
 }
 </style>
-
