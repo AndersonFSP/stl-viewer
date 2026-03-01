@@ -47,6 +47,14 @@ const handleToggleMode = () => {
 const handleResetTransform = () => {
   resetTransform()
 }
+
+const handleClearModel = () => {
+  clearModel()
+  // Resetar o input para permitir selecionar o mesmo arquivo novamente
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
 </script>
 
 <template>
@@ -67,7 +75,7 @@ const handleResetTransform = () => {
           {{ isLoading ? 'Carregando...' : 'Selecionar Arquivo STL' }}
         </button>
 
-        <button v-if="fileName" @click="clearModel" class="btn btn-secondary">Limpar Modelo</button>
+        <button v-if="fileName" @click="handleClearModel" class="btn btn-secondary">Limpar Modelo</button>
       </div>
 
       <div v-if="fileName" class="transform-controls">

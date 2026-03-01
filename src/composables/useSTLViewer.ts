@@ -13,8 +13,7 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
 
     stlViewer = new STLViewer(canvasRef.value)
     stlViewer.init()
-    
-    // Registrar callback para atualizar o modo quando mudar
+
     stlViewer.onModeChange((mode) => {
       controlMode.value = mode
     })
@@ -30,7 +29,6 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
       return
     }
 
-    // Validar extensão do arquivo
     if (!file.name.toLowerCase().endsWith('.stl')) {
       error.value = 'Por favor, selecione um arquivo .stl'
       return
