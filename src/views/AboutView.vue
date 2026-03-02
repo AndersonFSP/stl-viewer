@@ -50,7 +50,6 @@ const handleResetTransform = () => {
 
 const handleClearModel = () => {
   clearModel()
-  // Resetar o input para permitir selecionar o mesmo arquivo novamente
   if (fileInputRef.value) {
     fileInputRef.value.value = ''
   }
@@ -75,7 +74,9 @@ const handleClearModel = () => {
           {{ isLoading ? 'Carregando...' : 'Selecionar Arquivo STL' }}
         </button>
 
-        <button v-if="fileName" @click="handleClearModel" class="btn btn-secondary">Limpar Modelo</button>
+        <button v-if="fileName" @click="handleClearModel" class="btn btn-secondary">
+          Limpar Modelo
+        </button>
       </div>
 
       <div v-if="fileName" class="transform-controls">
@@ -147,10 +148,13 @@ const handleClearModel = () => {
   min-height: 100vh;
   padding: 2rem;
   background: #0f0f0f;
+  width: 100%;
+  min-width: 1000px;
 }
 
 .stl-viewer-container {
   max-width: 1200px;
+  /* width: 100%; */
   margin: 0 auto;
 }
 
@@ -303,10 +307,11 @@ h1 {
 .canvas-container {
   position: relative;
   width: 100%;
-  height: 600px;
+  max-width: 800px;
+  height: 700px;
+  margin: 0 auto 2rem auto;
   border: 2px dashed #42b983;
   border-radius: 12px;
-  margin-bottom: 2rem;
   overflow: visible;
   touch-action: none;
 }
@@ -403,7 +408,7 @@ h1 {
   }
 
   .canvas-container {
-    height: 400px;
+    height: 500px;
   }
 
   .drop-hint {
