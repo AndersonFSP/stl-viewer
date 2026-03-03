@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import type { TControlMode } from '@/models'
 
 export class STLViewer {
   private canvas: HTMLCanvasElement
@@ -13,8 +14,8 @@ export class STLViewer {
   private loader: STLLoader
   private isDragging = false
   private previousMousePosition = { x: 0, y: 0 }
-  private controlMode: 'object' | 'camera' = 'camera'
-  private onControlModeChange?: (mode: 'object' | 'camera') => void
+  private controlMode: TControlMode = 'camera'
+  private onControlModeChange?: (mode: TControlMode) => void
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -102,14 +103,9 @@ export class STLViewer {
     this.controls.rotateSpeed = 1.8
     this.controls.zoomSpeed = 1.5
     this.controls.panSpeed = 1.2
-
-    // Inicialmente habilitado (modo câmera)
     this.controls.enabled = true
   }
 
-  /**
-   * Configura event listeners
-   */
   private setupEventListeners(): void {
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('keydown', this.handleKeyDown)
@@ -119,13 +115,15 @@ export class STLViewer {
     this.canvas.addEventListener('mouseleave', this.handleMouseUp)
   }
 
-  /**
-   * Handler para teclas de atalho
-   */
   private handleKeyDown = (event: KeyboardEvent): void => {
-    if (event.key.toLowerCase() === 'c') {
-      this.toggleControlMode()
+    const key = event.key.toLowerCase()
+    const keyActionsConfig: Record<string, TControlMode> = {
+      c: 'camera',
+      r: 'object',
     }
+    const action = keyActionsConfig[key]
+    if (!action) return
+    this.setControlMode(action)
   }
 
   /**
@@ -276,20 +274,14 @@ export class STLViewer {
     this.setControlMode('camera')
   }
 
-  /**
-   * Alterna entre modo objeto e câmera
-   */
-  toggleControlMode(): void {
-    this.controlMode = this.controlMode === 'object' ? 'camera' : 'object'
-    this.controls.enabled = this.controlMode === 'camera'
-    this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
-    this.onControlModeChange?.(this.controlMode)
-  }
+  // toggleControlMode(): void {
+  //   this.controlMode = this.controlMode === 'object' ? 'camera' : 'object'
+  //   this.controls.enabled = this.controlMode === 'camera'
+  //   this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
+  //   this.onControlModeChange?.(this.controlMode)
+  // }
 
-  /**
-   * Define o modo de controle
-   */
-  setControlMode(mode: 'object' | 'camera'): void {
+  setControlMode(mode: TControlMode): void {
     this.controlMode = mode
     this.controls.enabled = mode === 'camera'
     this.canvas.style.cursor = mode === 'object' ? 'grab' : 'default'
@@ -299,20 +291,14 @@ export class STLViewer {
   /**
    * Obtém o modo de controle atual
    */
-  getControlMode(): 'object' | 'camera' {
+  getControlMode(): TControlMode {
     return this.controlMode
   }
 
-  /**
-   * Registra callback para mudanças de modo
-   */
-  onModeChange(callback: (mode: 'object' | 'camera') => void): void {
+  onModeChange(callback: (mode: TControlMode) => void): void {
     this.onControlModeChange = callback
   }
 
-  /**
-   * Reseta a transformação do modelo
-   */
   resetTransform(): void {
     if (this.stlMesh) {
       this.stlMesh.position.set(0, 0, 0)

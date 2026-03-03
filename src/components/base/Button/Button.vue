@@ -100,6 +100,10 @@ const buttonStyle = computed(() => ({
   cursor: pointer;
   transition: all 0.3s ease;
   outline: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-height: 2.5rem;
 }
 
 .button-sm {
@@ -119,7 +123,6 @@ const buttonStyle = computed(() => ({
 
 .button-component:not(:disabled):hover {
   filter: brightness(0.9);
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 

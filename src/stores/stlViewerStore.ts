@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { STLViewer } from '@/services/STLViewer'
+import type { TControlMode } from '@/models'
 
 export const useSTLViewerStore = defineStore('stlViewer', () => {
   // State
@@ -55,8 +56,13 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     error.value = null
   }
 
-  const toggleControlMode = () => {
-    stlViewer?.toggleControlMode()
+  // const toggleControlMode = () => {
+  //   stlViewer?.toggleControlMode()
+  // }
+
+
+  const setControlMode = (mode: TControlMode) => {
+    stlViewer?.setControlMode(mode)
   }
 
   const getControlMode = () => {
@@ -91,7 +97,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     initViewer,
     loadFile,
     clearModel,
-    toggleControlMode,
+    setControlMode,
     getControlMode,
     resetTransform,
     dispose,

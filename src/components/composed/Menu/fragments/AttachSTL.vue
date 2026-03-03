@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { FileInput, Button } from '@/components'
+import { FileInput } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
 
 const store = useSTLViewerStore()
-const { hasFileAttached, isLoading } = storeToRefs(store)
-const { loadFile, clearModel } = store
+const { isLoading } = storeToRefs(store)
+const { loadFile } = store
 </script>
 
 <template>
@@ -17,7 +17,6 @@ const { loadFile, clearModel } = store
       :loading="isLoading"
       @fileSelected="loadFile"
     />
-    <Button v-if="hasFileAttached" type="secondary" @click="clearModel">Limpar Modelo</Button>
   </div>
 </template>
 <style scoped>

@@ -1,4 +1,11 @@
-export type TButtonType = 'primary' | 'secondary' | 'danger' | 'warning' | 'info' | 'muted' | 'success'
+export type TButtonType =
+  | 'primary'
+  | 'secondary'
+  | 'danger'
+  | 'warning'
+  | 'info'
+  | 'muted'
+  | 'success'
 export type TButtonSize = 'sm' | 'base' | 'lg'
 
 export interface IButtonProps {

@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { Button } from '@/components'
 import type { IFileInputProps } from './types';
+import {  Paperclip } from 'lucide-vue-next'
+
 
 withDefaults(defineProps<IFileInputProps>(), {
   accept: '*',
@@ -53,6 +55,7 @@ const handleFileSelect = (event: Event) => {
       @click="triggerFileInput"
     >
       {{ loading ? loadingText : buttonText }}
+      <Paperclip :size="18" v-if="!loading"/>
     </Button>
   </div>
 </template>

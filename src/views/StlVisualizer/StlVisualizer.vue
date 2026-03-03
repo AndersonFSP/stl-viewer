@@ -1,34 +1,12 @@
 <script setup lang="ts">
 import { CanvasArea, Menu } from '@/components'
-import { useTemplateRef, watchEffect } from 'vue'
-import { useSTLViewerStore } from '@/stores/stlViewerStore'
-
-const canvasArea = useTemplateRef('canvasArea')
-const store = useSTLViewerStore()
-
-const { loadFile, initViewer } = store
-
-const handleDrop = (event: DragEvent) => {
-  const file = event.dataTransfer?.files[0]
-  if (file) {
-    loadFile(file)
-  }
-}
-
-const handleDragOver = (event: DragEvent) => {
-  event.preventDefault()
-}
-
-watchEffect(() => {
-  if (canvasArea.value?.canvasRef) {
-    initViewer(canvasArea.value.canvasRef)
-  }
-})
 </script>
 
 <template>
-  <Menu />
-  <CanvasArea @drop="handleDrop" @dragover="handleDragOver" ref="canvasArea" />
+  <div class="stl-viewer-layout">
+    <Menu />
+    <CanvasArea />
+  </div>
   <!-- <div class="instructions">
       <h3>✨ Como Usar - SIMPLES:</h3>
       <div class="instruction-section highlight">
@@ -62,7 +40,43 @@ watchEffect(() => {
 </template>
 
 <style scoped>
-.about {
+.stl-viewer-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: #0f0f0f;
+  overflow: hidden;
+}
+
+.stl-viewer-layout :deep(.about) {
+  flex-shrink: 0;
+}
+
+.stl-viewer-layout :deep(.canvas-container) {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .stl-viewer-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .stl-viewer-layout :deep(.about) {
+    width: 100%;
+    border-right: none;
+    border-bottom: 2px solid #42b983;
+  }
+
+  .stl-viewer-layout :deep(.canvas-container) {
+    min-height: 600px;
+    flex: 1;
+  }
+}
+
+/* .about {
   min-height: 100vh;
   padding: 2rem;
   background: #0f0f0f;
@@ -104,10 +118,9 @@ watchEffect(() => {
   50% {
     box-shadow: 0 0 25px rgba(39, 174, 96, 0.9);
   }
-}
+} */
 
-
-.stl-canvas {
+/* .stl-canvas {
   width: 100%;
   height: 100%;
   display: block;
@@ -129,7 +142,7 @@ watchEffect(() => {
   text-align: center;
   pointer-events: none;
   padding: 2rem;
-}
+} */
 
 .instructions {
   background: #1a1a1a;
