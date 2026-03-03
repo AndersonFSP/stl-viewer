@@ -11,6 +11,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
   const fileName = ref<string | null>(null)
   const controlMode = ref<'object' | 'camera'>('camera')
   const canvasRef = ref<HTMLCanvasElement | null>(null)
+  const lightsEnabled = ref(true)
 
   // Actions
   const initViewer = (canvas: HTMLCanvasElement) => {
@@ -60,7 +61,6 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
   //   stlViewer?.toggleControlMode()
   // }
 
-
   const setControlMode = (mode: TControlMode) => {
     stlViewer?.setControlMode(mode)
   }
@@ -71,6 +71,11 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
 
   const resetTransform = () => {
     stlViewer?.resetTransform()
+  }
+
+  const toggleLights = () => {
+    stlViewer?.toggleLights()
+    lightsEnabled.value = stlViewer?.areLightsEnabled() ?? true
   }
 
   const dispose = () => {
@@ -93,6 +98,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     fileName,
     controlMode,
     canvasRef,
+    lightsEnabled,
     hasFileAttached,
     initViewer,
     loadFile,
@@ -100,6 +106,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     setControlMode,
     getControlMode,
     resetTransform,
+    toggleLights,
     dispose,
     clearError,
   }

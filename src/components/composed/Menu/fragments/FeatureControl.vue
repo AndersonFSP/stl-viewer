@@ -2,14 +2,14 @@
 import { Box, Button, Tooltip } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
-import { Camera, Rotate3D } from 'lucide-vue-next'
+import { Camera, Rotate3D, Lightbulb } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import type { TControlMode } from '@/models'
 import type { TButtonType } from '@/components/base/Button/types'
 
 const store = useSTLViewerStore()
-const { controlMode } = storeToRefs(store)
-const { resetTransform, setControlMode } = store
+const { controlMode, lightsEnabled } = storeToRefs(store)
+const { resetTransform, setControlMode, toggleLights } = store
 
 const buttonConfig = ref([
   {
@@ -40,6 +40,14 @@ const controls = computed(() =>
         </Button>
         <template #content>
           {{ button.description }}
+        </template>
+      </Tooltip>
+      <Tooltip position="bottom">
+        <Button :type="lightsEnabled ? 'success' : 'muted'" @click="toggleLights">
+          <Lightbulb :size="18" />
+        </Button>
+        <template #content>
+          {{ lightsEnabled ? 'Desativar Luzes' : 'Ativar Luzes' }}
         </template>
       </Tooltip>
     </div>

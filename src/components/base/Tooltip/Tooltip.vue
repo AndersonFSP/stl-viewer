@@ -72,6 +72,11 @@ const hideTooltip = () => {
   line-height: 1.5;
   word-wrap: break-word;
   white-space: normal;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .tooltip-fade-enter-active,

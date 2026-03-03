@@ -17,6 +17,14 @@ export class STLViewer {
   private controlMode: TControlMode = 'camera'
   private onControlModeChange?: (mode: TControlMode) => void
 
+  // Luzes e helpers
+  private ambientLight!: THREE.AmbientLight
+  private mainLight!: THREE.DirectionalLight
+  private fillLight!: THREE.DirectionalLight
+  private sideLight!: THREE.PointLight
+  private lightHelpers: THREE.Object3D[] = []
+  private lightsEnabled = true
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.loader = new STLLoader()
@@ -40,7 +48,7 @@ export class STLViewer {
    */
   private setupScene(): void {
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x1a1a1a)
+    this.scene.background = new THREE.Color(0x0a0a0a)
 
     const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222)
     this.scene.add(gridHelper)
@@ -69,6 +77,8 @@ export class STLViewer {
     })
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
     this.canvas.style.touchAction = 'none'
     this.canvas.tabIndex = 1
@@ -78,16 +88,105 @@ export class STLViewer {
    * Configura as luzes da cena
    */
   private setupLights(): void {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
-    this.scene.add(ambientLight)
+    // Luz ambiente - sempre ativa para manter o modelo visível
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
+    this.scene.add(this.ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
-    directionalLight.position.set(5, 10, 5)
-    this.scene.add(directionalLight)
+    // Luz direcional principal (de cima)
+    this.mainLight = new THREE.DirectionalLight(0xffffff, 2.0)
+    this.mainLight.position.set(15, 15, 15)
+    this.mainLight.castShadow = true
+    this.mainLight.shadow.mapSize.width = 2048
+    this.mainLight.shadow.mapSize.height = 2048
+    this.mainLight.shadow.camera.near = 0.5
+    this.mainLight.shadow.camera.far = 500
+    this.scene.add(this.mainLight)
 
-    const light2 = new THREE.DirectionalLight(0xffffff, 0.5)
-    light2.position.set(-5, 5, -5)
-    this.scene.add(light2)
+    // Luz de preenchimento (de baixo/trás)
+    this.fillLight = new THREE.DirectionalLight(0x6699ff, 1.2)
+    this.fillLight.position.set(-15, -10, -15)
+    this.scene.add(this.fillLight)
+
+    // Luz lateral para dar volume
+    this.sideLight = new THREE.PointLight(0xffffff, 1.0, 100)
+    this.sideLight.position.set(10, 0, 10)
+    this.scene.add(this.sideLight)
+
+    // Criar helpers visuais para as luzes
+    this.createLightHelpers()
+  }
+
+  /**
+   * Cria representações visuais das luzes
+   */
+  private createLightHelpers(): void {
+    const sphereGeometry = new THREE.SphereGeometry(0.5, 16, 16)
+
+    // Esfera amarela para luz principal (de cima)
+    const mainLightSphere = new THREE.Mesh(
+      sphereGeometry,
+      new THREE.MeshBasicMaterial({
+        color: 0xffff00,
+        transparent: true,
+        opacity: 0.8,
+      }),
+    )
+    mainLightSphere.position.copy(this.mainLight.position)
+    this.lightHelpers.push(mainLightSphere)
+    this.scene.add(mainLightSphere)
+
+    // Esfera azul para luz de preenchimento (de baixo)
+    const fillLightSphere = new THREE.Mesh(
+      sphereGeometry,
+      new THREE.MeshBasicMaterial({
+        color: 0x6699ff,
+        transparent: true,
+        opacity: 0.8,
+      }),
+    )
+    fillLightSphere.position.copy(this.fillLight.position)
+    this.lightHelpers.push(fillLightSphere)
+    this.scene.add(fillLightSphere)
+
+    // Esfera branca para luz lateral
+    const sideLightSphere = new THREE.Mesh(
+      sphereGeometry,
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.8,
+      }),
+    )
+    sideLightSphere.position.copy(this.sideLight.position)
+    this.lightHelpers.push(sideLightSphere)
+    this.scene.add(sideLightSphere)
+  }
+
+  /**
+   * Ativa/desativa as luzes da cena
+   */
+  toggleLights(): void {
+    this.lightsEnabled = !this.lightsEnabled
+
+    // Luz ambiente sempre ativa, mas ajusta intensidade
+    this.ambientLight.intensity = this.lightsEnabled ? 0.8 : 1.5
+
+    // Desliga/liga as luzes direcionais e pontuais
+    this.mainLight.visible = this.lightsEnabled
+    this.fillLight.visible = this.lightsEnabled
+    this.sideLight.visible = this.lightsEnabled
+
+    // Mostrar/ocultar helpers
+    this.lightHelpers.forEach((helper) => {
+      helper.visible = this.lightsEnabled
+    })
+  }
+
+  /**
+   * Retorna o estado atual das luzes
+   */
+  areLightsEnabled(): boolean {
+    return this.lightsEnabled
   }
 
   /**
@@ -216,6 +315,8 @@ export class STLViewer {
 
           this.stlMesh = new THREE.Mesh(geometry, material)
           this.stlMesh.scale.set(scale, scale, scale)
+          this.stlMesh.castShadow = true
+          this.stlMesh.receiveShadow = true
 
           this.scene.add(this.stlMesh)
 

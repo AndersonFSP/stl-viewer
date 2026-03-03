@@ -47,6 +47,8 @@ export class ThreeScene {
     })
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
   }
 
   /**
@@ -55,18 +57,45 @@ export class ThreeScene {
   private setupObjects(): void {
     const geometry = new THREE.BoxGeometry(2, 2, 2)
 
-    // Materiais coloridos para cada face
+    // Materiais coloridos para cada face - usando MeshPhongMaterial para refletir luz
     const materials = [
-      new THREE.MeshBasicMaterial({ color: 0xff0000 }), // Vermelho
-      new THREE.MeshBasicMaterial({ color: 0x00ff00 }), // Verde
-      new THREE.MeshBasicMaterial({ color: 0x0000ff }), // Azul
-      new THREE.MeshBasicMaterial({ color: 0xffff00 }), // Amarelo
-      new THREE.MeshBasicMaterial({ color: 0xff00ff }), // Magenta
-      new THREE.MeshBasicMaterial({ color: 0x00ffff }), // Ciano
+      new THREE.MeshPhongMaterial({ color: 0xff0000, shininess: 100 }), // Vermelho
+      new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 }), // Verde
+      new THREE.MeshPhongMaterial({ color: 0x0000ff, shininess: 100 }), // Azul
+      new THREE.MeshPhongMaterial({ color: 0xffff00, shininess: 100 }), // Amarelo
+      new THREE.MeshPhongMaterial({ color: 0xff00ff, shininess: 100 }), // Magenta
+      new THREE.MeshPhongMaterial({ color: 0x00ffff, shininess: 100 }), // Ciano
     ]
 
     this.cube = new THREE.Mesh(geometry, materials)
+    this.cube.castShadow = true
+    this.cube.receiveShadow = true
     this.scene.add(this.cube)
+
+    // Adicionar iluminação
+    this.setupLights()
+  }
+
+  /**
+   * Configura as fontes de luz da cena
+   */
+  private setupLights(): void {
+    // Luz ambiente (ilumina toda a cena uniformemente)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
+    this.scene.add(ambientLight)
+
+    // Luz direcional (como o sol)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5)
+    directionalLight.position.set(10, 10, 10)
+    directionalLight.castShadow = true
+    directionalLight.shadow.mapSize.width = 2048
+    directionalLight.shadow.mapSize.height = 2048
+    this.scene.add(directionalLight)
+
+    // Luz adicional para melhor iluminação
+    const backLight = new THREE.DirectionalLight(0x80a0ff, 0.8)
+    backLight.position.set(-10, -10, 10)
+    this.scene.add(backLight)
   }
 
   /**
