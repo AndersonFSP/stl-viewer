@@ -99,9 +99,9 @@ export class STLViewer {
     this.controls.screenSpacePanning = false
     this.controls.minDistance = 1
     this.controls.maxDistance = 100
-    this.controls.rotateSpeed = 1.0
-    this.controls.zoomSpeed = 1.2
-    this.controls.panSpeed = 0.8
+    this.controls.rotateSpeed = 1.8
+    this.controls.zoomSpeed = 1.5
+    this.controls.panSpeed = 1.2
 
     // Inicialmente habilitado (modo câmera)
     this.controls.enabled = true
@@ -150,8 +150,8 @@ export class STLViewer {
     const deltaY = event.clientY - this.previousMousePosition.y
 
     // Rotacionar o objeto com base no movimento do mouse
-    this.stlMesh.rotation.y += deltaX * 0.01
-    this.stlMesh.rotation.x += deltaY * 0.01
+    this.stlMesh.rotation.y += deltaX * 0.005
+    this.stlMesh.rotation.x += deltaY * 0.005
 
     this.previousMousePosition = { x: event.clientX, y: event.clientY }
   }

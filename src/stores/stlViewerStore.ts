@@ -1,27 +1,28 @@
-import { onMounted, onUnmounted, ref, type Ref } from 'vue'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 import { STLViewer } from '@/services/STLViewer'
 
-export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
+export const useSTLViewerStore = defineStore('stlViewer', () => {
+  // State
   let stlViewer: STLViewer | null = null
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const fileName = ref<string | null>(null)
   const controlMode = ref<'object' | 'camera'>('camera')
+  const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-  onMounted(() => {
-    if (!canvasRef.value) return
+  // Actions
+  const initViewer = (canvas: HTMLCanvasElement) => {
+    if (!canvas) return
 
-    stlViewer = new STLViewer(canvasRef.value)
+    canvasRef.value = canvas
+    stlViewer = new STLViewer(canvas)
     stlViewer.init()
 
     stlViewer.onModeChange((mode) => {
       controlMode.value = mode
     })
-  })
-
-  onUnmounted(() => {
-    stlViewer?.dispose()
-  })
+  }
 
   const loadFile = async (file: File) => {
     if (!stlViewer) {
@@ -66,16 +67,34 @@ export function useSTLViewer(canvasRef: Ref<HTMLCanvasElement | null>) {
     stlViewer?.resetTransform()
   }
 
+  const dispose = () => {
+    stlViewer?.dispose()
+    stlViewer = null
+    fileName.value = null
+    error.value = null
+    canvasRef.value = null
+  }
+
+  const clearError = () => {
+    error.value = null
+  }
+
+  const hasFileAttached = computed(() => Boolean(fileName.value))
+
   return {
-    stlViewer,
     isLoading,
     error,
     fileName,
     controlMode,
+    canvasRef,
+    hasFileAttached,
+    initViewer,
     loadFile,
     clearModel,
     toggleControlMode,
     getControlMode,
     resetTransform,
+    dispose,
+    clearError,
   }
-}
+})
