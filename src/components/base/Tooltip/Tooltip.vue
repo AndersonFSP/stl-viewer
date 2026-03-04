@@ -53,6 +53,7 @@ const hideTooltip = () => {
 .tooltip-wrapper {
   position: relative;
   display: inline-block;
+  z-index: 10000;
 }
 
 .tooltip {
@@ -62,7 +63,7 @@ const hideTooltip = () => {
   padding: 0.9rem 1.2rem;
   border-radius: 6px;
   font-size: 0.95rem;
-  z-index: 1000;
+  z-index: 999999;
   border: 1px solid rgba(150, 150, 150, 0.4);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   pointer-events: none;

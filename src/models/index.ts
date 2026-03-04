@@ -1,1 +1,1 @@
-export type TControlMode = 'object' | 'camera'
+export type TControlMode = 'object' | 'camera' | 'scale'

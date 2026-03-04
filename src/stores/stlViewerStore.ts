@@ -9,7 +9,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const fileName = ref<string | null>(null)
-  const controlMode = ref<'object' | 'camera'>('camera')
+  const controlMode = ref<TControlMode>('camera')
   const canvasRef = ref<HTMLCanvasElement | null>(null)
   const lightsEnabled = ref(true)
 
@@ -57,10 +57,6 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     error.value = null
   }
 
-  // const toggleControlMode = () => {
-  //   stlViewer?.toggleControlMode()
-  // }
-
   const setControlMode = (mode: TControlMode) => {
     stlViewer?.setControlMode(mode)
   }
@@ -76,6 +72,22 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
   const toggleLights = () => {
     stlViewer?.toggleLights()
     lightsEnabled.value = stlViewer?.areLightsEnabled() ?? true
+  }
+
+  const scaleModel = (factor: number) => {
+    stlViewer?.scaleModel(factor)
+  }
+
+  const setModelScale = (x: number, y?: number, z?: number) => {
+    stlViewer?.setModelScale(x, y, z)
+  }
+
+  const resetModelScale = () => {
+    stlViewer?.resetModelScale()
+  }
+
+  const getModelScale = () => {
+    return stlViewer?.getModelScale()
   }
 
   const dispose = () => {
@@ -107,6 +119,10 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     getControlMode,
     resetTransform,
     toggleLights,
+    scaleModel,
+    setModelScale,
+    resetModelScale,
+    getModelScale,
     dispose,
     clearError,
   }

@@ -47,6 +47,11 @@ const typeStyles = {
     bgHover: '#2c3e50',
     color: '#ecf0f1',
   },
+  light: {
+    bg: '#FFD700',
+    bgHover: '#FFC700',
+    color: '#1a1a1a',
+  },
 }
 
 const currentStyle = computed(() => typeStyles[props.type])
@@ -137,5 +142,18 @@ const buttonStyle = computed(() => ({
 
 .w-full {
   width: 100%;
+}
+
+/* Estilo especial para botão de luz acesa */
+.button-component[style*="FFD700"],
+.button-component[style*="FFC700"] {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  position: relative;
+}
+
+.button-component[style*="FFD700"]:not(:disabled):hover,
+.button-component[style*="FFC700"]:not(:disabled):hover {
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), 0 4px 12px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
 }
 </style>

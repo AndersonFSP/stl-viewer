@@ -1,35 +1,22 @@
 <script setup lang="ts">
-import { Typography, Button } from '@/components'
-import { AttachSTL, FeatureControl } from '@/components/composed/Menu/fragments'
+import { Typography } from '@/components'
+import { AttachSTL, FeatureControl, Header } from '@/components/composed/Menu/fragments'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
-import { FileBox, Trash2 } from 'lucide-vue-next'
 
 const store = useSTLViewerStore()
-const { fileName, error, hasFileAttached } = storeToRefs(store)
-const { clearModel } = store
+const { error, hasFileAttached } = storeToRefs(store)
 </script>
 <template>
-  <section class="about">
-    <Typography tag="h1" size="3xl" bold color="primary" align="center">
-      Visualizador de STL
-    </Typography>
-    <div v-if="hasFileAttached" class="file-name"> 
-      <FileBox :size="18" color="white" />
-      <Typography  size="base" bold color="primary" align="center">
-        {{ fileName }}
-      </Typography>
-      <Button  type="secondary" @click="clearModel"  size="sm">
-        <Trash2 :size="18" />
-      </Button>
-    </div>
+  <section class="menu">
+    <Header />
     <AttachSTL v-if="!hasFileAttached" />
     <FeatureControl v-if="hasFileAttached"  />
     <Typography v-if="error" color="danger" size="lg">⚠️ {{ error }}</Typography>
   </section>
 </template>
 <style scoped>
-.about {
+.menu {
   min-height: 100vh;
   padding: 2rem;
   background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
@@ -40,7 +27,7 @@ const { clearModel } = store
   position: relative;
 }
 
-.about::after {
+.menu::after {
   content: '';
   position: absolute;
   right: 0;
@@ -55,6 +42,7 @@ const { clearModel } = store
     transparent
   );
 }
+
 .file-name {
   display: flex;
   align-items: center;

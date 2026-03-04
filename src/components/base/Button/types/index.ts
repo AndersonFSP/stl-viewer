@@ -6,6 +6,7 @@ export type TButtonType =
   | 'info'
   | 'muted'
   | 'success'
+  | 'light'
 export type TButtonSize = 'sm' | 'base' | 'lg'
 
 export interface IButtonProps {

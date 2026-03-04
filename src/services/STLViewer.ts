@@ -78,7 +78,7 @@ export class STLViewer {
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.shadowMap.type = THREE.PCFShadowMap
 
     this.canvas.style.touchAction = 'none'
     this.canvas.tabIndex = 1
@@ -162,9 +162,6 @@ export class STLViewer {
     this.scene.add(sideLightSphere)
   }
 
-  /**
-   * Ativa/desativa as luzes da cena
-   */
   toggleLights(): void {
     this.lightsEnabled = !this.lightsEnabled
 
@@ -190,6 +187,47 @@ export class STLViewer {
   }
 
   /**
+   * Altera a escala do modelo STL
+   */
+  scaleModel(factor: number): void {
+    if (this.stlMesh) {
+      this.stlMesh.scale.multiplyScalar(factor)
+    }
+  }
+
+  /**
+   * Define a escala absoluta do modelo
+   */
+  setModelScale(x: number, y?: number, z?: number): void {
+    if (this.stlMesh) {
+      this.stlMesh.scale.set(x, y ?? x, z ?? x)
+    }
+  }
+
+  /**
+   * Reseta a escala do modelo para 1
+   */
+  resetModelScale(): void {
+    if (this.stlMesh) {
+      this.stlMesh.scale.set(1, 1, 1)
+    }
+  }
+
+  /**
+   * Obtém a escala atual do modelo
+   */
+  getModelScale(): { x: number; y: number; z: number } | null {
+    if (this.stlMesh) {
+      return {
+        x: this.stlMesh.scale.x,
+        y: this.stlMesh.scale.y,
+        z: this.stlMesh.scale.z,
+      }
+    }
+    return null
+  }
+
+  /**
    * Configura os controles de órbita
    */
   private setupControls(): void {
@@ -212,17 +250,20 @@ export class STLViewer {
     this.canvas.addEventListener('mousemove', this.handleMouseMove)
     this.canvas.addEventListener('mouseup', this.handleMouseUp)
     this.canvas.addEventListener('mouseleave', this.handleMouseUp)
+    this.canvas.addEventListener('wheel', this.handleWheel, { passive: false, capture: true })
   }
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     const key = event.key.toLowerCase()
-    const keyActionsConfig: Record<string, TControlMode> = {
-      c: 'camera',
-      r: 'object',
+    const keyActionsConfig: Record<string, () => void> = {
+      c: () => this.setControlMode('camera'),
+      r: () => this.setControlMode('object'),
+      s: () => this.setControlMode('scale'),
+      l: () => this.toggleLights(),
     }
     const action = keyActionsConfig[key]
     if (!action) return
-    this.setControlMode(action)
+    action()
   }
 
   /**
@@ -261,6 +302,21 @@ export class STLViewer {
       this.isDragging = false
       this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
     }
+  }
+
+  /**
+   * Handler para roda do mouse - controla escala em modo 'scale'
+   */
+  private handleWheel = (event: WheelEvent): void => {
+    if (this.controlMode !== 'scale' || !this.stlMesh) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const scaleSpeed = 0.05
+    const direction = event.deltaY > 0 ? -1 : 1
+    const scaleFactor = 1 + scaleSpeed * direction
+    this.scaleModel(scaleFactor)
   }
 
   /**
@@ -371,21 +427,27 @@ export class STLViewer {
       }
       this.stlMesh = null
     }
-    // Voltar para modo câmera quando não há objeto
     this.setControlMode('camera')
   }
 
-  // toggleControlMode(): void {
-  //   this.controlMode = this.controlMode === 'object' ? 'camera' : 'object'
-  //   this.controls.enabled = this.controlMode === 'camera'
-  //   this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
-  //   this.onControlModeChange?.(this.controlMode)
-  // }
-
   setControlMode(mode: TControlMode): void {
     this.controlMode = mode
-    this.controls.enabled = mode === 'camera'
-    this.canvas.style.cursor = mode === 'object' ? 'grab' : 'default'
+
+    // Habilita/desabilita controles conforme o modo
+    if (mode === 'camera') {
+      this.controls.enabled = true
+      this.controls.enableZoom = true
+      this.canvas.style.cursor = 'default'
+    } else if (mode === 'object') {
+      this.controls.enabled = false
+      this.controls.enableZoom = false
+      this.canvas.style.cursor = 'grab'
+    } else if (mode === 'scale') {
+      this.controls.enabled = false
+      this.controls.enableZoom = false
+      this.canvas.style.cursor = 'ns-resize'
+    }
+
     this.onControlModeChange?.(mode)
   }
 
@@ -440,6 +502,7 @@ export class STLViewer {
     this.canvas.removeEventListener('mousemove', this.handleMouseMove)
     this.canvas.removeEventListener('mouseup', this.handleMouseUp)
     this.canvas.removeEventListener('mouseleave', this.handleMouseUp)
+    this.canvas.removeEventListener('wheel', this.handleWheel)
 
     this.clearSTL()
 

@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
+import { ModeInstructions } from '@/components/composed/CanvasArea/fragments'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const store = useSTLViewerStore()
@@ -31,7 +32,8 @@ onMounted(() => {
 <template>
   <div class="canvas-container" @drop="handleDrop" @dragover="handleDragOver">
     <canvas ref="canvasRef" class="stl-canvas"></canvas>
-    <div v-if="!hasFileAttached" class="drop-hint">
+    <ModeInstructions v-if="hasFileAttached" />
+    <div v-else class="drop-hint">
       Arraste um arquivo .stl aqui ou utilize o botão
     </div>
   </div>
@@ -42,9 +44,7 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 100vh;
-  /* margin: auto 1rem; */
   padding: 1.5rem;
-  /* border: 1px solid rgba(66, 185, 131, 0.3); */
   border-radius: 8px;
   overflow: hidden;
   touch-action: none;
