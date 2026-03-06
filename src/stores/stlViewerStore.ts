@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { STLViewer } from '@/services/STLViewer'
-import type { TControlMode } from '@/models'
+import type { TControlMode, PrintMetrics } from '@/models'
 
 export const useSTLViewerStore = defineStore('stlViewer', () => {
   // State
@@ -12,6 +12,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
   const controlMode = ref<TControlMode>('camera')
   const canvasRef = ref<HTMLCanvasElement | null>(null)
   const lightsEnabled = ref(true)
+  const metrics = ref<PrintMetrics | null>(null)
 
   // Actions
   const initViewer = (canvas: HTMLCanvasElement) => {
@@ -43,6 +44,10 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     try {
       await stlViewer.loadSTL(file)
       fileName.value = file.name
+      
+      // Calcular métricas após carregar o arquivo
+      const calculatedMetrics = stlViewer.calculatePrintMetrics()
+      metrics.value = calculatedMetrics
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Erro ao carregar arquivo STL'
       fileName.value = null
@@ -55,6 +60,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     stlViewer?.clearSTL()
     fileName.value = null
     error.value = null
+    metrics.value = null
   }
 
   const setControlMode = (mode: TControlMode) => {
@@ -96,6 +102,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     fileName.value = null
     error.value = null
     canvasRef.value = null
+    metrics.value = null
   }
 
   const clearError = () => {
@@ -111,6 +118,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     controlMode,
     canvasRef,
     lightsEnabled,
+    metrics,
     hasFileAttached,
     initViewer,
     loadFile,

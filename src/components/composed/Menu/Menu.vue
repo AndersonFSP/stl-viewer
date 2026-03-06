@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Typography } from '@/components'
-import { AttachSTL, FeatureControl, Header } from '@/components/composed/Menu/fragments'
+import { AttachSTL, FeatureControl, Header, PrintMetrics } from '@/components/composed/Menu/fragments'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
 
@@ -12,13 +12,14 @@ const { error, hasFileAttached } = storeToRefs(store)
     <Header />
     <AttachSTL v-if="!hasFileAttached" />
     <FeatureControl v-if="hasFileAttached"  />
+    <PrintMetrics v-if="hasFileAttached" />
     <Typography v-if="error" color="danger" size="lg">⚠️ {{ error }}</Typography>
   </section>
 </template>
 <style scoped>
 .menu {
   min-height: 100vh;
-  padding: 2rem;
+  padding: 0 1.5rem;
   background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
   width: 33%;
   max-width: 550px;

@@ -31,7 +31,7 @@ const { clearModel } = store
 </template>
 <style scoped>
 .header {
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 .header-title {

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import type { TControlMode } from '@/models'
+import type { TControlMode, PrintMetrics } from '@/models'
 
 export class STLViewer {
   private canvas: HTMLCanvasElement
@@ -16,6 +16,7 @@ export class STLViewer {
   private previousMousePosition = { x: 0, y: 0 }
   private controlMode: TControlMode = 'camera'
   private onControlModeChange?: (mode: TControlMode) => void
+  private currentMetrics: PrintMetrics | null = null
 
   // Luzes e helpers
   private ambientLight!: THREE.AmbientLight
@@ -427,6 +428,7 @@ export class STLViewer {
       }
       this.stlMesh = null
     }
+    this.currentMetrics = null
     this.setControlMode('camera')
   }
 
@@ -486,6 +488,137 @@ export class STLViewer {
    */
   getMesh(): THREE.Mesh | null {
     return this.stlMesh
+  }
+
+  /**
+   * Calcula as métricas de impressão 3D do modelo atual
+   */
+  calculatePrintMetrics(): PrintMetrics | null {
+    if (!this.stlMesh) return null
+
+    const geometry = this.stlMesh.geometry as THREE.BufferGeometry
+    
+    // Calcular volume usando o método de soma de tetraedros
+    // IMPORTANTE: calcular sem aplicar a escala visual (que é só para visualização)
+    let volume = 0
+    const position = geometry.attributes.position
+    if (!position) return null
+    for (let i = 0; i < position.count; i += 3) {
+      const v1 = new THREE.Vector3(
+        position.getX(i),
+        position.getY(i),
+        position.getZ(i)
+      )
+      const v2 = new THREE.Vector3(
+        position.getX(i + 1),
+        position.getY(i + 1),
+        position.getZ(i + 1)
+      )
+      const v3 = new THREE.Vector3(
+        position.getX(i + 2),
+        position.getY(i + 2),
+        position.getZ(i + 2)
+      )
+      
+      // Volume do tetraedro formado pela origem e o triângulo
+      volume += v1.dot(v2.cross(v3)) / 6
+    }
+    
+    // Volume agora está nas unidades originais do STL (geralmente mm)
+    // Não aplicar a escala visual do mesh, pois ela é apenas para visualização
+    volume = Math.abs(volume)
+    
+    // Converter mm³ para cm³ (dividir por 1000)
+    const volumeCm3 = volume / 1000
+    
+    // Calcular dimensões originais do STL (sem escala visual)
+    geometry.computeBoundingBox()
+    const bbox = geometry.boundingBox!
+    const originalSize = bbox.getSize(new THREE.Vector3())
+    
+    const dimensions = {
+      width: originalSize.x, // mm
+      height: originalSize.y, // mm
+      depth: originalSize.z, // mm
+    }
+    
+    // Calcular área de superfície (sem escala visual)
+    let surfaceArea = 0
+    for (let i = 0; i < position.count; i += 3) {
+      const v1 = new THREE.Vector3(
+        position.getX(i),
+        position.getY(i),
+        position.getZ(i)
+      )
+      const v2 = new THREE.Vector3(
+        position.getX(i + 1),
+        position.getY(i + 1),
+        position.getZ(i + 1)
+      )
+      const v3 = new THREE.Vector3(
+        position.getX(i + 2),
+        position.getY(i + 2),
+        position.getZ(i + 2)
+      )
+      
+      // Área do triângulo usando produto vetorial
+      const edge1 = v2.clone().sub(v1)
+      const edge2 = v3.clone().sub(v1)
+      const cross = edge1.cross(edge2)
+      surfaceArea += cross.length() / 2
+    }
+    
+    // Converter mm² para cm² (dividimos por 100)
+    const surfaceAreaCm2 = surfaceArea / 100
+    
+    // Calcular quantidade de triângulos
+    const triangleCount = position.count / 3
+    
+    // Constantes para cálculos
+    const PLA_DENSITY = 1.24 // g/cm³
+    const ABS_DENSITY = 1.04 // g/cm³
+    const FILAMENT_DIAMETER = 1.75 // mm
+    const FILAMENT_AREA = Math.PI * Math.pow(FILAMENT_DIAMETER / 2, 2) / 100 // cm²
+    
+    // Calcular consumo de filamento PLA
+    const plaWeight = volumeCm3 * PLA_DENSITY
+    const plaLength = (volumeCm3 / FILAMENT_AREA) / 100 // metros
+    
+    // Calcular consumo de filamento ABS
+    const absWeight = volumeCm3 * ABS_DENSITY
+    const absLength = (volumeCm3 / FILAMENT_AREA) / 100 // metros
+    
+    // Calcular consumo de resina (ml = cm³)
+    const resinVolume = volumeCm3
+    
+    this.currentMetrics = {
+      volume: volumeCm3,
+      dimensions,
+      filament: {
+        pla: {
+          weight: plaWeight,
+          length: plaLength,
+        },
+        abs: {
+          weight: absWeight,
+          length: absLength,
+        },
+      },
+      resin: {
+        volume: resinVolume,
+      },
+      surfaceArea: surfaceAreaCm2,
+      triangles: triangleCount,
+    }
+    console.log(triangleCount)
+    return this.currentMetrics
+  }
+
+  /**
+   * Obtém as métricas calculadas
+   */
+  getMetrics(): PrintMetrics | null {
+    return this.currentMetrics
   }
 
   /**
