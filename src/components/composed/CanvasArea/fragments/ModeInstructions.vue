@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { HighlightCard, Typography } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
-import { Camera, Component, Rotate3D, Scaling } from 'lucide-vue-next'
+import { Camera, Rotate3D, Scaling } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
