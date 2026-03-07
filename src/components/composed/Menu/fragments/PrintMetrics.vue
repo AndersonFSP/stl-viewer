@@ -70,14 +70,13 @@ const stlMetrics = computed(() => {
 
 <template>
   <Box v-if="stlMetrics.geometry.length > 0" class="metrics-container">
-    <div class="metrics-header">
-      <Typography tag="h3" size="base" bold color="primary">
-        <div class="header-title">
-          <BoxIcon :size="20" />
-          Métricas de Impressão 3D
-        </div>
-      </Typography>
-    </div>
+    <Typography tag="h3" size="base" bold color="primary">
+      <div class="header-title">
+        <BoxIcon :size="20" />
+        Métricas de Impressão 3D
+      </div>
+    </Typography>
+
     <Divider spacing="none" />
 
     <div class="metrics-grid">
@@ -95,9 +94,9 @@ const stlMetrics = computed(() => {
         :details="metric.details"
         :icon="metric.icon"
       />
-    <Divider spacing="none" />
     </div>
-    <div class="metrics-footer">
+    <div>
+      <Divider spacing="none" />
       <Typography tag="p" size="xs" color="secondary" align="right">
         * Valores de materiais aproximados, sem considerar suportes.
       </Typography>
@@ -125,10 +124,5 @@ const stlMetrics = computed(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
-}
-
-.metrics-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
 }
 </style>
