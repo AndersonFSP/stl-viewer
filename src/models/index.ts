@@ -1,16 +1,16 @@
-export type TControlMode = 'object' | 'camera' | 'scale'
+export type TControlMode = 'object' | 'camera' | 'scale' | 'move'
 
 export interface PrintMetrics {
-  volume: number 
+  volume: number
   dimensions: {
-    width: number 
-    height: number 
-    depth: number 
+    width: number
+    height: number
+    depth: number
   }
   filament: {
     pla: {
       weight: number
-      length: number 
+      length: number
     }
     abs: {
       weight: number

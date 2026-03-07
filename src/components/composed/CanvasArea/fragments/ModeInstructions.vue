@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { HighlightCard, Typography } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
-import { Camera, Rotate3D, Scaling } from 'lucide-vue-next'
+import { Video, Rotate3D, Scaling } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
@@ -18,7 +18,7 @@ const config = {
   },
   camera: {
     title: 'Modo de Câmera',
-    icon: Camera,
+    icon: Video,
     list: [
       'Clique e arraste em qualquer lugar para rotacionar a câmera',
       'Zoom in/out com o scroll do mouse',

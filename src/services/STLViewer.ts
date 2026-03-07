@@ -53,9 +53,6 @@ export class STLViewer {
 
     const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222)
     this.scene.add(gridHelper)
-
-    const axesHelper = new THREE.AxesHelper(5)
-    this.scene.add(axesHelper)
   }
 
   /**
@@ -260,6 +257,7 @@ export class STLViewer {
       c: () => this.setControlMode('camera'),
       r: () => this.setControlMode('object'),
       s: () => this.setControlMode('scale'),
+      m: () => this.setControlMode('move'),
       l: () => this.toggleLights(),
     }
     const action = keyActionsConfig[key]
@@ -271,7 +269,7 @@ export class STLViewer {
    * Handler para mouse down
    */
   private handleMouseDown = (event: MouseEvent): void => {
-    if (this.controlMode !== 'object' || !this.stlMesh) return
+    if ((this.controlMode !== 'object' && this.controlMode !== 'move') || !this.stlMesh) return
 
     event.preventDefault()
     this.isDragging = true
@@ -283,14 +281,21 @@ export class STLViewer {
    * Handler para mouse move
    */
   private handleMouseMove = (event: MouseEvent): void => {
-    if (!this.isDragging || this.controlMode !== 'object' || !this.stlMesh) return
+    if (!this.isDragging || (this.controlMode !== 'object' && this.controlMode !== 'move') || !this.stlMesh) return
 
     const deltaX = event.clientX - this.previousMousePosition.x
     const deltaY = event.clientY - this.previousMousePosition.y
 
-    // Rotacionar o objeto com base no movimento do mouse
-    this.stlMesh.rotation.y += deltaX * 0.005
-    this.stlMesh.rotation.x += deltaY * 0.005
+    if (this.controlMode === 'object') {
+      // Rotacionar o objeto com base no movimento do mouse
+      this.stlMesh.rotation.y += deltaX * 0.005
+      this.stlMesh.rotation.x += deltaY * 0.005
+    } else if (this.controlMode === 'move') {
+      // Mover o objeto horizontalmente (X) e verticalmente (Y)
+      const moveSpeed = 0.02
+      this.stlMesh.position.x += deltaX * moveSpeed
+      this.stlMesh.position.y -= deltaY * moveSpeed
+    }
 
     this.previousMousePosition = { x: event.clientX, y: event.clientY }
   }
@@ -301,7 +306,13 @@ export class STLViewer {
   private handleMouseUp = (): void => {
     if (this.isDragging) {
       this.isDragging = false
-      this.canvas.style.cursor = this.controlMode === 'object' ? 'grab' : 'default'
+      const cursorMap = {
+        object: 'grab',
+        move: 'move',
+        camera: 'default',
+        scale: 'ns-resize',
+      }
+      this.canvas.style.cursor = cursorMap[this.controlMode] || 'default'
     }
   }
 
@@ -374,6 +385,11 @@ export class STLViewer {
           this.stlMesh.scale.set(scale, scale, scale)
           this.stlMesh.castShadow = true
           this.stlMesh.receiveShadow = true
+
+          // Posicionar o modelo acima do grid (base em Y=0)
+          const box = new THREE.Box3().setFromObject(this.stlMesh)
+          const minY = box.min.y
+          this.stlMesh.position.y = -minY
 
           this.scene.add(this.stlMesh)
 
@@ -448,6 +464,10 @@ export class STLViewer {
       this.controls.enabled = false
       this.controls.enableZoom = false
       this.canvas.style.cursor = 'ns-resize'
+    } else if (mode === 'move') {
+      this.controls.enabled = false
+      this.controls.enableZoom = false
+      this.canvas.style.cursor = 'move'
     }
 
     this.onControlModeChange?.(mode)
@@ -497,100 +517,76 @@ export class STLViewer {
     if (!this.stlMesh) return null
 
     const geometry = this.stlMesh.geometry as THREE.BufferGeometry
-    
+
     // Calcular volume usando o método de soma de tetraedros
     // IMPORTANTE: calcular sem aplicar a escala visual (que é só para visualização)
     let volume = 0
     const position = geometry.attributes.position
     if (!position) return null
     for (let i = 0; i < position.count; i += 3) {
-      const v1 = new THREE.Vector3(
-        position.getX(i),
-        position.getY(i),
-        position.getZ(i)
-      )
-      const v2 = new THREE.Vector3(
-        position.getX(i + 1),
-        position.getY(i + 1),
-        position.getZ(i + 1)
-      )
-      const v3 = new THREE.Vector3(
-        position.getX(i + 2),
-        position.getY(i + 2),
-        position.getZ(i + 2)
-      )
-      
+      const v1 = new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i))
+      const v2 = new THREE.Vector3(position.getX(i + 1), position.getY(i + 1), position.getZ(i + 1))
+      const v3 = new THREE.Vector3(position.getX(i + 2), position.getY(i + 2), position.getZ(i + 2))
+
       // Volume do tetraedro formado pela origem e o triângulo
       volume += v1.dot(v2.cross(v3)) / 6
     }
-    
+
     // Volume agora está nas unidades originais do STL (geralmente mm)
     // Não aplicar a escala visual do mesh, pois ela é apenas para visualização
     volume = Math.abs(volume)
-    
+
     // Converter mm³ para cm³ (dividir por 1000)
     const volumeCm3 = volume / 1000
-    
+
     // Calcular dimensões originais do STL (sem escala visual)
     geometry.computeBoundingBox()
     const bbox = geometry.boundingBox!
     const originalSize = bbox.getSize(new THREE.Vector3())
-    
+
     const dimensions = {
       width: originalSize.x, // mm
       height: originalSize.y, // mm
       depth: originalSize.z, // mm
     }
-    
+
     // Calcular área de superfície (sem escala visual)
     let surfaceArea = 0
     for (let i = 0; i < position.count; i += 3) {
-      const v1 = new THREE.Vector3(
-        position.getX(i),
-        position.getY(i),
-        position.getZ(i)
-      )
-      const v2 = new THREE.Vector3(
-        position.getX(i + 1),
-        position.getY(i + 1),
-        position.getZ(i + 1)
-      )
-      const v3 = new THREE.Vector3(
-        position.getX(i + 2),
-        position.getY(i + 2),
-        position.getZ(i + 2)
-      )
-      
+      const v1 = new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i))
+      const v2 = new THREE.Vector3(position.getX(i + 1), position.getY(i + 1), position.getZ(i + 1))
+      const v3 = new THREE.Vector3(position.getX(i + 2), position.getY(i + 2), position.getZ(i + 2))
+
       // Área do triângulo usando produto vetorial
       const edge1 = v2.clone().sub(v1)
       const edge2 = v3.clone().sub(v1)
       const cross = edge1.cross(edge2)
       surfaceArea += cross.length() / 2
     }
-    
+
     // Converter mm² para cm² (dividimos por 100)
     const surfaceAreaCm2 = surfaceArea / 100
-    
+
     // Calcular quantidade de triângulos
     const triangleCount = position.count / 3
-    
+
     // Constantes para cálculos
     const PLA_DENSITY = 1.24 // g/cm³
     const ABS_DENSITY = 1.04 // g/cm³
     const FILAMENT_DIAMETER = 1.75 // mm
-    const FILAMENT_AREA = Math.PI * Math.pow(FILAMENT_DIAMETER / 2, 2) / 100 // cm²
-    
+    const FILAMENT_AREA = (Math.PI * Math.pow(FILAMENT_DIAMETER / 2, 2)) / 100 // cm²
+
     // Calcular consumo de filamento PLA
     const plaWeight = volumeCm3 * PLA_DENSITY
-    const plaLength = (volumeCm3 / FILAMENT_AREA) / 100 // metros
-    
+    const plaLength = volumeCm3 / FILAMENT_AREA / 100 // metros
+
     // Calcular consumo de filamento ABS
     const absWeight = volumeCm3 * ABS_DENSITY
-    const absLength = (volumeCm3 / FILAMENT_AREA) / 100 // metros
-    
+    const absLength = volumeCm3 / FILAMENT_AREA / 100 // metros
+
     // Calcular consumo de resina (ml = cm³)
     const resinVolume = volumeCm3
-    
+
     this.currentMetrics = {
       volume: volumeCm3,
       dimensions,
@@ -610,7 +606,6 @@ export class STLViewer {
       surfaceArea: surfaceAreaCm2,
       triangles: triangleCount,
     }
-    console.log(triangleCount)
     return this.currentMetrics
   }
 

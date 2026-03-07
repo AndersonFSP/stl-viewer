@@ -2,7 +2,7 @@
 import { Box, Button, Tooltip } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
-import { Camera, Rotate3D, Lightbulb, Undo2, Scaling } from 'lucide-vue-next'
+import { Video, Rotate3D, Lightbulb, Undo2, Scaling, Move } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import type { TControlMode } from '@/models'
 import type { TButtonType } from '@/components/base/Button/types'
@@ -19,13 +19,18 @@ const buttonConfig = ref([
   },
   {
     mode: 'camera',
-    icon: Camera,
+    icon: Video,
     description: 'Modo câmera: (C)',
   },
   {
     mode: 'scale',
     icon: Scaling,
     description: 'Modo escala: (S)',
+  },
+  {
+    mode: 'move',
+    icon: Move,
+    description: 'Modo mover: (M)',
   },
 ])
 
@@ -38,7 +43,7 @@ const controls = computed(() =>
 </script>
 <template>
   <section class="container">
-    <Box title="Modos de controle">
+    <Box title="Funcionalidades">
       <div class="control-buttons">
         <Tooltip v-for="button in controls" :key="button.mode" position="bottom">
           <Button :type="button.type" @click="setControlMode(button.mode as TControlMode)">
@@ -49,8 +54,6 @@ const controls = computed(() =>
           </template>
         </Tooltip>
       </div>
-    </Box>
-    <Box title="Efeitos">
       <div class="control-buttons">
         <Tooltip position="bottom">
           <Button :type="lightsEnabled ? 'light' : 'muted'" @click="toggleLights">
