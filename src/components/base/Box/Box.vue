@@ -7,7 +7,7 @@ defineProps<IBoxProps>()
 
 <template>
   <section class="container">
-    <Typography v-if="title" size="base" bold color="primary" class="box-title">
+    <Typography v-if="title" tag="h3" size="base" bold color="primary" class="box-title">
       {{ title }}
     </Typography>
     <slot />

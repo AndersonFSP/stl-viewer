@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Box, Button, Tooltip } from '@/components'
+import { Box, Button, Tooltip, Divider } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
 import { Video, Rotate3D, Lightbulb, Undo2, Scaling, Move } from 'lucide-vue-next'
@@ -44,28 +44,31 @@ const controls = computed(() =>
 <template>
   <section class="container">
     <Box title="Funcionalidades">
-      <div class="control-buttons">
-        <Tooltip v-for="button in controls" :key="button.mode" position="bottom">
-          <Button :type="button.type" @click="setControlMode(button.mode as TControlMode)">
-            <component :is="button.icon" :size="18" />
-          </Button>
-          <template #content>
-            {{ button.description }}
-          </template>
-        </Tooltip>
-      </div>
-      <div class="control-buttons">
-        <Tooltip position="bottom">
-          <Button :type="lightsEnabled ? 'light' : 'muted'" @click="toggleLights">
-            <Lightbulb :size="18" />
-          </Button>
-          <template #content>
-            {{ lightsEnabled ? 'Desativar Luzes' : 'Ativar Luzes' }}
-          </template>
-        </Tooltip>
-        <Tooltip text="Volta o objeto para posição inicial" position="bottom">
-          <Button type="info" @click="resetTransform"> <Undo2 :size="18" /> </Button>
-        </Tooltip>
+      <Divider spacing="none" />
+      <div class="control">
+        <div class="control-buttons">
+          <Tooltip v-for="button in controls" :key="button.mode" position="bottom">
+            <Button :type="button.type" @click="setControlMode(button.mode as TControlMode)">
+              <component :is="button.icon" :size="18" />
+            </Button>
+            <template #content>
+              {{ button.description }}
+            </template>
+          </Tooltip>
+        </div>
+        <div class="control-buttons">
+          <Tooltip position="bottom">
+            <Button :type="lightsEnabled ? 'light' : 'muted'" @click="toggleLights">
+              <Lightbulb :size="18" />
+            </Button>
+            <template #content>
+              {{ lightsEnabled ? 'Desativar Luzes' : 'Ativar Luzes' }}
+            </template>
+          </Tooltip>
+          <Tooltip text="Volta o objeto para posição inicial" position="bottom">
+            <Button type="info" @click="resetTransform"> <Undo2 :size="18" /> </Button>
+          </Tooltip>
+        </div>
       </div>
     </Box>
   </section>
@@ -74,11 +77,17 @@ const controls = computed(() =>
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.2rem;
+  margin-bottom: 0.3rem
+}
+.control {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.7rem;
+  gap: 1rem;
 }
 .control-buttons {
   display: flex;
   gap: 0.8rem;
-  margin-bottom: 1rem;
 }
 </style>

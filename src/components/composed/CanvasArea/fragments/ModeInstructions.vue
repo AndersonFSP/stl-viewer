@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { HighlightCard, Typography } from '@/components'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
-import { Video, Rotate3D, Scaling } from 'lucide-vue-next'
+import { Video, Rotate3D, Scaling, Move } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
@@ -30,6 +30,13 @@ const config = {
     icon: Scaling,
     list: [
       'Utilize o scroll do mouse para aumentar ou diminuir a escala do objeto',
+    ],
+  },
+  move: {
+    title: 'Modo de Movimento',
+    icon: Move,
+    list: [
+      'Clique e arraste para mover o objeto',
     ],
   }
 }

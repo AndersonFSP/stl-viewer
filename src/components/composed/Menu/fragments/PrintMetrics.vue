@@ -71,7 +71,7 @@ const stlMetrics = computed(() => {
 <template>
   <Box v-if="stlMetrics.geometry.length > 0" class="metrics-container">
     <div class="metrics-header">
-      <Typography tag="h3" size="base" color="primary">
+      <Typography tag="h3" size="base" bold color="primary">
         <div class="header-title">
           <BoxIcon :size="20" />
           Métricas de Impressão 3D
