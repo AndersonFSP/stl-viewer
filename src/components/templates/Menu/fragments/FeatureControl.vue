@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia'
 import { Video, Rotate3D, Lightbulb, Undo2, Scaling, Move } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import type { TControlMode } from '@/models'
-import type { TButtonType } from '@/components/base/Button/types'
+import type { TButtonType } from '@/components/atoms/Button/types'
 
 const store = useSTLViewerStore()
 const { controlMode, lightsEnabled } = storeToRefs(store)

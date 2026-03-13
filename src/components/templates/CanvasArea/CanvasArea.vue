@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
-import { ModeInstructions } from '@/components/composed/CanvasArea/fragments'
+import { ModeInstructions } from '@/components/templates/CanvasArea/fragments'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const store = useSTLViewerStore()

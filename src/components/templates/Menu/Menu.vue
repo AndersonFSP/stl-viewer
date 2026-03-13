@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Typography } from '@/components'
-import { AttachSTL, FeatureControl, Header, PrintMetrics } from '@/components/composed/Menu/fragments'
+import { AttachSTL, FeatureControl, Header, PrintMetrics } from '@/components/templates/Menu/fragments'
 import { useSTLViewerStore } from '@/stores/stlViewerStore'
 import { storeToRefs } from 'pinia'
 
