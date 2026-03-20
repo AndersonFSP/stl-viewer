@@ -88,13 +88,9 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     stlViewer?.setModelScale(x, y, z)
   }
 
-  const resetModelScale = () => {
-    stlViewer?.resetModelScale()
-  }
-
-  const getModelScale = () => {
-    return stlViewer?.getModelScale()
-  }
+  // const getModelScale = () => {
+  //   return stlViewer?.getModelScale()
+  // }
 
   const dispose = () => {
     stlViewer?.dispose()
@@ -129,8 +125,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     toggleLights,
     scaleModel,
     setModelScale,
-    resetModelScale,
-    getModelScale,
+    // getModelScale,
     dispose,
     clearError,
   }

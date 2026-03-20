@@ -17,8 +17,9 @@ export class STLViewer {
   private controlMode: TControlMode = 'camera'
   private onControlModeChange?: (mode: TControlMode) => void
   private currentMetrics: PrintMetrics | null = null
+  private initialPosition: THREE.Vector3 | null = null
+  private initialScale: THREE.Vector3 | null = null
 
-  // Luzes e helpers
   private ambientLight!: THREE.AmbientLight
   private mainLight!: THREE.DirectionalLight
   private fillLight!: THREE.DirectionalLight
@@ -31,9 +32,6 @@ export class STLViewer {
     this.loader = new STLLoader()
   }
 
-  /**
-   * Inicializa a cena, câmera, renderer e controles
-   */
   init(): void {
     this.setupScene()
     this.setupCamera()
@@ -44,9 +42,6 @@ export class STLViewer {
     this.animate()
   }
 
-  /**
-   * Configura a cena Three.js
-   */
   private setupScene(): void {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x0a0a0a)
@@ -55,9 +50,6 @@ export class STLViewer {
     this.scene.add(gridHelper)
   }
 
-  /**
-   * Configura a câmera perspectiva
-   */
   private setupCamera(): void {
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000)
@@ -82,9 +74,6 @@ export class STLViewer {
     this.canvas.tabIndex = 1
   }
 
-  /**
-   * Configura as luzes da cena
-   */
   private setupLights(): void {
     // Luz ambiente - sempre ativa para manter o modelo visível
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
@@ -100,14 +89,14 @@ export class STLViewer {
     this.mainLight.shadow.camera.far = 500
     this.scene.add(this.mainLight)
 
-    // Luz de preenchimento (de baixo/trás)
+    // Luz de preenchimento (frontal oposta à principal)
     this.fillLight = new THREE.DirectionalLight(0x6699ff, 1.2)
-    this.fillLight.position.set(-15, -10, -15)
+    this.fillLight.position.set(-12, 5, 12)
     this.scene.add(this.fillLight)
 
-    // Luz lateral para dar volume
+    // Luz lateral/traseira (rim light) para separar objeto do fundo e criar volume
     this.sideLight = new THREE.PointLight(0xffffff, 1.0, 100)
-    this.sideLight.position.set(10, 0, 10)
+    this.sideLight.position.set(12, 8, -12)
     this.scene.add(this.sideLight)
 
     // Criar helpers visuais para as luzes
@@ -133,7 +122,7 @@ export class STLViewer {
     this.lightHelpers.push(mainLightSphere)
     this.scene.add(mainLightSphere)
 
-    // Esfera azul para luz de preenchimento (de baixo)
+    // Esfera azul para luz de preenchimento (frontal esquerda)
     const fillLightSphere = new THREE.Mesh(
       sphereGeometry,
       new THREE.MeshBasicMaterial({
@@ -146,7 +135,7 @@ export class STLViewer {
     this.lightHelpers.push(fillLightSphere)
     this.scene.add(fillLightSphere)
 
-    // Esfera branca para luz lateral
+    // Esfera branca para luz lateral/traseira (rim light)
     const sideLightSphere = new THREE.Mesh(
       sphereGeometry,
       new THREE.MeshBasicMaterial({
@@ -193,41 +182,12 @@ export class STLViewer {
     }
   }
 
-  /**
-   * Define a escala absoluta do modelo
-   */
   setModelScale(x: number, y?: number, z?: number): void {
     if (this.stlMesh) {
       this.stlMesh.scale.set(x, y ?? x, z ?? x)
     }
   }
 
-  /**
-   * Reseta a escala do modelo para 1
-   */
-  resetModelScale(): void {
-    if (this.stlMesh) {
-      this.stlMesh.scale.set(1, 1, 1)
-    }
-  }
-
-  /**
-   * Obtém a escala atual do modelo
-   */
-  getModelScale(): { x: number; y: number; z: number } | null {
-    if (this.stlMesh) {
-      return {
-        x: this.stlMesh.scale.x,
-        y: this.stlMesh.scale.y,
-        z: this.stlMesh.scale.z,
-      }
-    }
-    return null
-  }
-
-  /**
-   * Configura os controles de órbita
-   */
   private setupControls(): void {
     this.controls = new OrbitControls(this.camera, this.canvas)
     this.controls.enableDamping = true
@@ -277,21 +237,21 @@ export class STLViewer {
     this.canvas.style.cursor = 'grabbing'
   }
 
-  /**
-   * Handler para mouse move
-   */
   private handleMouseMove = (event: MouseEvent): void => {
-    if (!this.isDragging || (this.controlMode !== 'object' && this.controlMode !== 'move') || !this.stlMesh) return
+    if (
+      !this.isDragging ||
+      (this.controlMode !== 'object' && this.controlMode !== 'move') ||
+      !this.stlMesh
+    )
+      return
 
     const deltaX = event.clientX - this.previousMousePosition.x
     const deltaY = event.clientY - this.previousMousePosition.y
 
     if (this.controlMode === 'object') {
-      // Rotacionar o objeto com base no movimento do mouse
       this.stlMesh.rotation.y += deltaX * 0.005
       this.stlMesh.rotation.x += deltaY * 0.005
     } else if (this.controlMode === 'move') {
-      // Mover o objeto horizontalmente (X) e verticalmente (Y)
       const moveSpeed = 0.02
       this.stlMesh.position.x += deltaX * moveSpeed
       this.stlMesh.position.y -= deltaY * moveSpeed
@@ -300,9 +260,6 @@ export class STLViewer {
     this.previousMousePosition = { x: event.clientX, y: event.clientY }
   }
 
-  /**
-   * Handler para mouse up
-   */
   private handleMouseUp = (): void => {
     if (this.isDragging) {
       this.isDragging = false
@@ -391,6 +348,10 @@ export class STLViewer {
           const minY = box.min.y
           this.stlMesh.position.y = -minY
 
+          // Armazenar posição e escala iniciais para restauração no reset
+          this.initialPosition = this.stlMesh.position.clone()
+          this.initialScale = this.stlMesh.scale.clone()
+
           this.scene.add(this.stlMesh)
 
           this.fitCameraToObject()
@@ -409,9 +370,6 @@ export class STLViewer {
     })
   }
 
-  /**
-   * Ajusta a câmera para visualizar o objeto completamente
-   */
   private fitCameraToObject(): void {
     if (!this.stlMesh) return
 
@@ -430,9 +388,6 @@ export class STLViewer {
     this.controls.update()
   }
 
-  /**
-   * Remove o mesh STL atual da cena
-   */
   clearSTL(): void {
     if (this.stlMesh) {
       this.scene.remove(this.stlMesh)
@@ -445,6 +400,8 @@ export class STLViewer {
       this.stlMesh = null
     }
     this.currentMetrics = null
+    this.initialPosition = null
+    this.initialScale = null
     this.setControlMode('camera')
   }
 
@@ -485,16 +442,14 @@ export class STLViewer {
   }
 
   resetTransform(): void {
-    if (this.stlMesh) {
-      this.stlMesh.position.set(0, 0, 0)
+    if (this.stlMesh && this.initialPosition && this.initialScale) {
+      this.stlMesh.position.copy(this.initialPosition)
+      this.stlMesh.scale.copy(this.initialScale)
       this.stlMesh.rotation.set(0, 0, 0)
       this.fitCameraToObject()
     }
   }
 
-  /**
-   * Loop de animação
-   */
   animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate)
 
@@ -503,9 +458,6 @@ export class STLViewer {
     this.renderer.render(this.scene, this.camera)
   }
 
-  /**
-   * Obtém o mesh STL atual
-   */
   getMesh(): THREE.Mesh | null {
     return this.stlMesh
   }
