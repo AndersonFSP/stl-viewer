@@ -19,6 +19,7 @@ export interface PrintMetrics {
   }
   resin: {
     volume: number
+    weight: number
   }
   surfaceArea: number
   triangles: number

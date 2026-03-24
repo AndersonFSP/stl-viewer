@@ -57,9 +57,6 @@ export class STLViewer {
     this.camera.lookAt(0, 0, 0)
   }
 
-  /**
-   * Configura o renderer WebGL
-   */
   private setupRenderer(): void {
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -75,11 +72,10 @@ export class STLViewer {
   }
 
   private setupLights(): void {
-    // Luz ambiente - sempre ativa para manter o modelo visível
+
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
     this.scene.add(this.ambientLight)
 
-    // Luz direcional principal (de cima)
     this.mainLight = new THREE.DirectionalLight(0xffffff, 2.0)
     this.mainLight.position.set(15, 15, 15)
     this.mainLight.castShadow = true
@@ -89,27 +85,22 @@ export class STLViewer {
     this.mainLight.shadow.camera.far = 500
     this.scene.add(this.mainLight)
 
-    // Luz de preenchimento (frontal oposta à principal)
     this.fillLight = new THREE.DirectionalLight(0x6699ff, 1.2)
     this.fillLight.position.set(-12, 5, 12)
     this.scene.add(this.fillLight)
 
-    // Luz lateral/traseira (rim light) para separar objeto do fundo e criar volume
+
     this.sideLight = new THREE.PointLight(0xffffff, 1.0, 100)
     this.sideLight.position.set(12, 8, -12)
     this.scene.add(this.sideLight)
 
-    // Criar helpers visuais para as luzes
+
     this.createLightHelpers()
   }
 
-  /**
-   * Cria representações visuais das luzes
-   */
   private createLightHelpers(): void {
     const sphereGeometry = new THREE.SphereGeometry(0.5, 16, 16)
 
-    // Esfera amarela para luz principal (de cima)
     const mainLightSphere = new THREE.Mesh(
       sphereGeometry,
       new THREE.MeshBasicMaterial({
@@ -122,7 +113,6 @@ export class STLViewer {
     this.lightHelpers.push(mainLightSphere)
     this.scene.add(mainLightSphere)
 
-    // Esfera azul para luz de preenchimento (frontal esquerda)
     const fillLightSphere = new THREE.Mesh(
       sphereGeometry,
       new THREE.MeshBasicMaterial({
@@ -135,7 +125,6 @@ export class STLViewer {
     this.lightHelpers.push(fillLightSphere)
     this.scene.add(fillLightSphere)
 
-    // Esfera branca para luz lateral/traseira (rim light)
     const sideLightSphere = new THREE.Mesh(
       sphereGeometry,
       new THREE.MeshBasicMaterial({
@@ -152,30 +141,22 @@ export class STLViewer {
   toggleLights(): void {
     this.lightsEnabled = !this.lightsEnabled
 
-    // Luz ambiente sempre ativa, mas ajusta intensidade
+
     this.ambientLight.intensity = this.lightsEnabled ? 0.8 : 1.5
 
-    // Desliga/liga as luzes direcionais e pontuais
     this.mainLight.visible = this.lightsEnabled
     this.fillLight.visible = this.lightsEnabled
     this.sideLight.visible = this.lightsEnabled
 
-    // Mostrar/ocultar helpers
     this.lightHelpers.forEach((helper) => {
       helper.visible = this.lightsEnabled
     })
   }
 
-  /**
-   * Retorna o estado atual das luzes
-   */
   areLightsEnabled(): boolean {
     return this.lightsEnabled
   }
 
-  /**
-   * Altera a escala do modelo STL
-   */
   scaleModel(factor: number): void {
     if (this.stlMesh) {
       this.stlMesh.scale.multiplyScalar(factor)
@@ -225,9 +206,6 @@ export class STLViewer {
     action()
   }
 
-  /**
-   * Handler para mouse down
-   */
   private handleMouseDown = (event: MouseEvent): void => {
     if ((this.controlMode !== 'object' && this.controlMode !== 'move') || !this.stlMesh) return
 
@@ -273,9 +251,6 @@ export class STLViewer {
     }
   }
 
-  /**
-   * Handler para roda do mouse - controla escala em modo 'scale'
-   */
   private handleWheel = (event: WheelEvent): void => {
     if (this.controlMode !== 'scale' || !this.stlMesh) return
 
@@ -288,9 +263,6 @@ export class STLViewer {
     this.scaleModel(scaleFactor)
   }
 
-  /**
-   * Handler para redimensionamento da janela
-   */
   private handleResize = (): void => {
     if (!this.canvas || !this.camera || !this.renderer) return
 
@@ -302,9 +274,6 @@ export class STLViewer {
     this.renderer.setSize(width, height)
   }
 
-  /**
-   * Carrega e renderiza um arquivo STL
-   */
   loadSTL(file: File): Promise<void> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -343,12 +312,10 @@ export class STLViewer {
           this.stlMesh.castShadow = true
           this.stlMesh.receiveShadow = true
 
-          // Posicionar o modelo acima do grid (base em Y=0)
           const box = new THREE.Box3().setFromObject(this.stlMesh)
           const minY = box.min.y
           this.stlMesh.position.y = -minY
 
-          // Armazenar posição e escala iniciais para restauração no reset
           this.initialPosition = this.stlMesh.position.clone()
           this.initialScale = this.stlMesh.scale.clone()
 
@@ -356,7 +323,6 @@ export class STLViewer {
 
           this.fitCameraToObject()
 
-          // Mudar para modo objeto após carregar
           this.setControlMode('object')
 
           resolve()
@@ -408,7 +374,6 @@ export class STLViewer {
   setControlMode(mode: TControlMode): void {
     this.controlMode = mode
 
-    // Habilita/desabilita controles conforme o modo
     if (mode === 'camera') {
       this.controls.enabled = true
       this.controls.enableZoom = true
@@ -430,9 +395,6 @@ export class STLViewer {
     this.onControlModeChange?.(mode)
   }
 
-  /**
-   * Obtém o modo de controle atual
-   */
   getControlMode(): TControlMode {
     return this.controlMode
   }
@@ -458,86 +420,64 @@ export class STLViewer {
     this.renderer.render(this.scene, this.camera)
   }
 
-  getMesh(): THREE.Mesh | null {
-    return this.stlMesh
-  }
-
-  /**
-   * Calcula as métricas de impressão 3D do modelo atual
-   */
   calculatePrintMetrics(): PrintMetrics | null {
     if (!this.stlMesh) return null
 
     const geometry = this.stlMesh.geometry as THREE.BufferGeometry
 
-    // Calcular volume usando o método de soma de tetraedros
-    // IMPORTANTE: calcular sem aplicar a escala visual (que é só para visualização)
     let volume = 0
     const position = geometry.attributes.position
     if (!position) return null
+  
     for (let i = 0; i < position.count; i += 3) {
       const v1 = new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i))
       const v2 = new THREE.Vector3(position.getX(i + 1), position.getY(i + 1), position.getZ(i + 1))
       const v3 = new THREE.Vector3(position.getX(i + 2), position.getY(i + 2), position.getZ(i + 2))
 
-      // Volume do tetraedro formado pela origem e o triângulo
       volume += v1.dot(v2.cross(v3)) / 6
     }
 
-    // Volume agora está nas unidades originais do STL (geralmente mm)
-    // Não aplicar a escala visual do mesh, pois ela é apenas para visualização
     volume = Math.abs(volume)
 
-    // Converter mm³ para cm³ (dividir por 1000)
     const volumeCm3 = volume / 1000
-
-    // Calcular dimensões originais do STL (sem escala visual)
     geometry.computeBoundingBox()
     const bbox = geometry.boundingBox!
     const originalSize = bbox.getSize(new THREE.Vector3())
 
     const dimensions = {
-      width: originalSize.x, // mm
-      height: originalSize.y, // mm
-      depth: originalSize.z, // mm
+      width: originalSize.x,
+      height: originalSize.y,
+      depth: originalSize.z,
     }
 
-    // Calcular área de superfície (sem escala visual)
     let surfaceArea = 0
     for (let i = 0; i < position.count; i += 3) {
       const v1 = new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i))
       const v2 = new THREE.Vector3(position.getX(i + 1), position.getY(i + 1), position.getZ(i + 1))
       const v3 = new THREE.Vector3(position.getX(i + 2), position.getY(i + 2), position.getZ(i + 2))
 
-      // Área do triângulo usando produto vetorial
       const edge1 = v2.clone().sub(v1)
       const edge2 = v3.clone().sub(v1)
       const cross = edge1.cross(edge2)
       surfaceArea += cross.length() / 2
     }
 
-    // Converter mm² para cm² (dividimos por 100)
     const surfaceAreaCm2 = surfaceArea / 100
 
-    // Calcular quantidade de triângulos
     const triangleCount = position.count / 3
+    const PLA_DENSITY = 1.24
+    const ABS_DENSITY = 1.04
+    const RESIN_DENSITY = 1.1
+    const FILAMENT_DIAMETER = 1.75
+    const FILAMENT_AREA = (Math.PI * Math.pow(FILAMENT_DIAMETER / 2, 2)) / 100
 
-    // Constantes para cálculos
-    const PLA_DENSITY = 1.24 // g/cm³
-    const ABS_DENSITY = 1.04 // g/cm³
-    const FILAMENT_DIAMETER = 1.75 // mm
-    const FILAMENT_AREA = (Math.PI * Math.pow(FILAMENT_DIAMETER / 2, 2)) / 100 // cm²
-
-    // Calcular consumo de filamento PLA
     const plaWeight = volumeCm3 * PLA_DENSITY
-    const plaLength = volumeCm3 / FILAMENT_AREA / 100 // metros
+    const plaLength = volumeCm3 / FILAMENT_AREA / 100
 
-    // Calcular consumo de filamento ABS
     const absWeight = volumeCm3 * ABS_DENSITY
-    const absLength = volumeCm3 / FILAMENT_AREA / 100 // metros
-
-    // Calcular consumo de resina (ml = cm³)
+    const absLength = volumeCm3 / FILAMENT_AREA / 100
     const resinVolume = volumeCm3
+    const resinWeight = volumeCm3 * RESIN_DENSITY
 
     this.currentMetrics = {
       volume: volumeCm3,
@@ -554,6 +494,7 @@ export class STLViewer {
       },
       resin: {
         volume: resinVolume,
+        weight: resinWeight,
       },
       surfaceArea: surfaceAreaCm2,
       triangles: triangleCount,
@@ -561,16 +502,10 @@ export class STLViewer {
     return this.currentMetrics
   }
 
-  /**
-   * Obtém as métricas calculadas
-   */
   getMetrics(): PrintMetrics | null {
     return this.currentMetrics
   }
 
-  /**
-   * Limpa recursos e event listeners
-   */
   dispose(): void {
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId)

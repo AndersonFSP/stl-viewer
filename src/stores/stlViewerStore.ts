@@ -44,8 +44,7 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     try {
       await stlViewer.loadSTL(file)
       fileName.value = file.name
-      
-      // Calcular métricas após carregar o arquivo
+    
       const calculatedMetrics = stlViewer.calculatePrintMetrics()
       metrics.value = calculatedMetrics
     } catch (err) {
@@ -88,10 +87,6 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     stlViewer?.setModelScale(x, y, z)
   }
 
-  // const getModelScale = () => {
-  //   return stlViewer?.getModelScale()
-  // }
-
   const dispose = () => {
     stlViewer?.dispose()
     stlViewer = null
@@ -125,7 +120,6 @@ export const useSTLViewerStore = defineStore('stlViewer', () => {
     toggleLights,
     scaleModel,
     setModelScale,
-    // getModelScale,
     dispose,
     clearError,
   }

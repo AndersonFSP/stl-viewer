@@ -61,7 +61,10 @@ const stlMetrics = computed(() => {
       {
         title: 'Resina',
         icon: Droplet,
-        details: [{ label: 'Volume', value: `${formatNumber(metrics.value?.resin.volume)} ml` }],
+        details: [
+          { label: 'Volume', value: `${formatNumber(metrics.value?.resin.volume)} ml` },
+          { label: 'Peso', value: `${formatNumber(metrics.value?.resin.weight)} g` },
+        ],
       },
     ],
   }
@@ -97,8 +100,8 @@ const stlMetrics = computed(() => {
     </div>
     <div>
       <Divider spacing="none" />
-      <Typography tag="p" size="xs" color="secondary" align="right">
-        * Valores de materiais aproximados, sem considerar suportes.
+      <Typography tag="p" size="xs" color="secondary" align="left">
+        * Valores de materiais aproximados. Assumem que a peça será sólida e não consideram suportes.
       </Typography>
     </div>
   </Box>
